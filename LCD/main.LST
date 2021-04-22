@@ -1,0 +1,359 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              06/25/2020 00:59:14 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG TABS(2)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          
+   3          extern void LcdInit();
+   4          extern void LcdWelcome();
+   5          extern void Lcd_Cursor(char row, char column);
+   6          extern void Lcd_DisplayCharacter(char a_char);
+   7          extern void Lcd_DisplayString(char row, char column, char * string);
+   8          extern void Lcd_WriteControl(unsigned char LcdCommand);
+   9          extern void Lcd_DisplayScreen (char *ptr);
+  10          
+  11          unsigned char data Var1, Var2, Var3;
+  12          
+  13          volatile unsigned char data licznik_wX = '0';
+  14          volatile unsigned char data licznik_wO = '0';
+  15          
+  16          volatile unsigned char data player = 'x';
+  17          
+  18          volatile unsigned char data ostatniWyg = ' ';
+  19          volatile unsigned char data koniecGry = '0';
+  20          volatile unsigned char data koniecGryOst='0';
+  21          volatile unsigned char data czyjaKolej[] = " TERAZ:_";
+  22          volatile unsigned char data remis[] = " REMIS! ";
+  23          char data remiss=0;
+  24          volatile unsigned char data wygralX[] = " Wyg: x!";
+  25          volatile unsigned char data wygralO[] = " Wyg: o!";
+  26          volatile unsigned char pole1 = ' ', pole2 = ' ', pole3 = ' ', pole4 = ' ', pole5 = ' ', pole6 = ' ', pole7
+             - = ' ', pole8 = ' ', pole9 = ' ';
+  27          
+  28          static unsigned char code wygX[] =          "   KONIEC GRY!  "
+  29                                                      "   WYGRYWA: x!  "
+  30                                                      "----------------" 
+  31                                                      "KONRAD KOWALCZYK";
+  32          
+  33          static unsigned char code wygO[] =          "   KONIEC GRY!  "
+  34                                                      "   WYGRYWA: o!  "
+  35                                                      "----------------" 
+  36                                                      "KONRAD KOWALCZYK";
+  37          
+  38          static unsigned char code poczatek[] =      " | |  WYGRANE   "
+  39                                                      " | |  x:  o:    "
+  40                                                      " | |            "
+  41                                                      "Konrad o/x 36334";
+  42          
+  43          void wait(void) {
+  44   1        unsigned char data x, y;
+  45   1        for (x = 50; x > 0; x--)
+  46   1          for (y = 50; y > 0; y--) {
+  47   2            ;
+  48   2          }
+  49   1      }
+  50          
+  51          void zamieniacz(void) {
+  52   1        if (player == 'x') {
+  53   2          player = 'o';
+  54   2        } else if (player == 'o') {
+C51 COMPILER V9.60.0.0   MAIN                                                              06/25/2020 00:59:14 PAGE 2   
+
+  55   2          player = 'x';
+  56   2        }
+  57   1      }
+  58          
+  59          void Send(unsigned char Value) {
+  60   1        P3_4 = 1;
+  61   1        TI = 0;
+  62   1        SBUF = (Value);
+  63   1        while (TI == 0) {
+  64   2          ;
+  65   2        }
+  66   1        TI = 0;
+  67   1        P3_4 = 0;
+  68   1      }
+  69          
+  70          void sprawdzacz(void) {
+  71   1        if ((pole1 == pole2 && pole2 == pole3 && pole1 != ' ') ||
+  72   1            (pole4 == pole5 && pole5 == pole6 && pole4 != ' ') ||
+  73   1            (pole7 == pole8 && pole8 == pole9 && pole7 != ' ') ||
+  74   1            (pole1 == pole4 && pole4 == pole7 && pole7 != ' ') ||
+  75   1            (pole2 == pole5 && pole5 == pole8 && pole2 != ' ') ||
+  76   1            (pole3 == pole6 && pole6 == pole9 && pole3 != ' ') ||
+  77   1            (pole1 == pole5 && pole5 == pole9 && pole1 != ' ') ||
+  78   1            (pole3 == pole5 && pole5 == pole7 && pole3 != ' ')) {
+  79   2            if (player == 'x') {
+  80   3               ostatniWyg = 'o';
+  81   3              if (licznik_wO != '9') {
+  82   4                licznik_wO++;
+  83   4              }
+  84   3          } else {
+  85   3              ostatniWyg = 'x';
+  86   3              if (licznik_wX != '9') {
+  87   4                licznik_wX++;
+  88   4            }
+  89   3          }
+  90   2          koniecGry = '1';
+  91   2          
+  92   2        }
+  93   1          if(koniecGry== '1' && remiss==0) {
+  94   2            if(ostatniWyg=='x'){
+  95   3              Lcd_DisplayString(3, 6, wygralX);
+  96   3            }
+  97   2            else if (ostatniWyg=='o'){
+  98   3              Lcd_DisplayString(3, 6, wygralO);
+  99   3            }
+ 100   2            else {
+ 101   3              Lcd_DisplayString(3, 6, remis);
+ 102   3            }
+ 103   2          }
+ 104   1          
+ 105   1      }
+ 106          void spr2(void){
+ 107   1        if (
+ 108   1            koniecGry == '0' &&
+ 109   1            pole1 != ' ' &&
+ 110   1            pole2 != ' ' &&
+ 111   1            pole3 != ' ' &&
+ 112   1            pole4 != ' ' &&
+ 113   1            pole5 != ' ' &&
+ 114   1            pole6 != ' ' &&
+ 115   1            pole7 != ' ' &&
+ 116   1            pole8 != ' ' &&
+C51 COMPILER V9.60.0.0   MAIN                                                              06/25/2020 00:59:14 PAGE 3   
+
+ 117   1            pole9 != ' ' ) {
+ 118   2            koniecGry = '1';
+ 119   2            remiss=1;
+ 120   2            SBUF = '^';
+ 121   2            Lcd_DisplayString(3, 6, remis);
+ 122   2          }
+ 123   1        }
+ 124          
+ 125            
+ 126              
+ 127            void czyKONIEC(void){
+ 128   1          if(licznik_wX=='3'){
+ 129   2            Lcd_DisplayScreen(wygX);
+ 130   2            koniecGryOst='1';
+ 131   2          //  Send('#');
+ 132   2          }
+ 133   1          if(licznik_wO=='3'){
+ 134   2            Lcd_DisplayScreen(wygO);
+ 135   2            koniecGryOst='1';
+ 136   2          //  Send('*');
+ 137   2          }
+ 138   1            
+ 139   1        }
+ 140          
+ 141          
+ 142          void Init(void) {
+ 143   1        P3_4 = 0; // ustaw sie na odbior danych z portu szeregowego
+ 144   1        
+ 145   1        SCON = 0x50; // inicjowanie portu szeregowego
+ 146   1        RCAP2H = TH2 = 0xFF; // predkosc transmisji 1200b/sec przy CLK=1.3824MHz 
+ 147   1        RCAP2L = TL2 = 0xDC; // predkosc transmisji 1200b/sec przy CLK=1.3824MHz 
+ 148   1        T2CON = 0x20; // Timer 2 wyznacza predkosc transmisji przez Serial
+ 149   1        RI = TI = 0; // gaszenie flag odbiornika i nadajnika
+ 150   1        ES = 1; // wlacz odbieranie danych przez IRQ
+ 151   1        TR2 = 1; // wlacz Timer 2
+ 152   1        EA = 1; // wlacz globalna maske przerwan
+ 153   1        IT0=1;
+ 154   1        EX0=1;
+ 155   1      }
+ 156          
+ 157          void ISR_INT0(void) interrupt 0 {
+ 158   1        
+ 159   1      }
+ 160          
+ 161          void ISR_Serial(void) interrupt 4 {
+ 162   1        if (RI == 1) {
+ 163   2      
+ 164   2          if (koniecGry == '0') {
+ 165   3            Lcd_DisplayString(3, 6, czyjaKolej);
+ 166   3            Lcd_Cursor(3, 13);
+ 167   3            if (player == 'x') {
+ 168   4              Lcd_DisplayCharacter('x');
+ 169   4            } else if (player == 'o') {
+ 170   4              Lcd_DisplayCharacter('o');
+ 171   4            }
+ 172   3            switch (SBUF) {
+ 173   4            case '1':
+ 174   4              if(pole1==' '){
+ 175   5              Lcd_Cursor(1, 1);
+ 176   5              pole1 = player;
+ 177   5              Lcd_DisplayCharacter(pole1);
+ 178   5              zamieniacz();
+C51 COMPILER V9.60.0.0   MAIN                                                              06/25/2020 00:59:14 PAGE 4   
+
+ 179   5              }
+ 180   4              break;
+ 181   4            case '2':
+ 182   4              if(pole2==' '){
+ 183   5              Lcd_Cursor(1, 3);
+ 184   5              pole2 = player;
+ 185   5              Lcd_DisplayCharacter(pole2);
+ 186   5              zamieniacz();
+ 187   5              }
+ 188   4              break;
+ 189   4            case '3':
+ 190   4              if(pole3==' '){
+ 191   5              Lcd_Cursor(1, 5);
+ 192   5              pole3 = player;
+ 193   5              Lcd_DisplayCharacter(pole3);
+ 194   5              zamieniacz();
+ 195   5              }
+ 196   4              break;
+ 197   4            case '4':
+ 198   4              if(pole4==' '){
+ 199   5              Lcd_Cursor(2, 1);
+ 200   5              pole4 = player;
+ 201   5              Lcd_DisplayCharacter(pole4);
+ 202   5              zamieniacz();
+ 203   5              }
+ 204   4              break;
+ 205   4            case '5':
+ 206   4              if(pole5==' '){
+ 207   5              Lcd_Cursor(2, 3);
+ 208   5              pole5 = player;
+ 209   5              Lcd_DisplayCharacter(pole5);
+ 210   5              zamieniacz();
+ 211   5              }
+ 212   4              break;
+ 213   4            case '6':
+ 214   4              if(pole6==' '){
+ 215   5              Lcd_Cursor(2, 5);
+ 216   5              pole6 = player;
+ 217   5              Lcd_DisplayCharacter(pole6);
+ 218   5              zamieniacz();
+ 219   5              }
+ 220   4              break;
+ 221   4            case '7':
+ 222   4              if(pole7==' '){
+ 223   5              Lcd_Cursor(3, 1);
+ 224   5              pole7 = player;
+ 225   5              Lcd_DisplayCharacter(pole7);
+ 226   5              zamieniacz();
+ 227   5              }
+ 228   4              break;
+ 229   4            case '8':
+ 230   4              if(pole8==' '){
+ 231   5              Lcd_Cursor(3, 3);
+ 232   5              pole8 = player;
+ 233   5              Lcd_DisplayCharacter(pole8);
+ 234   5              zamieniacz();
+ 235   5              }
+ 236   4              break;
+ 237   4            case '9':
+ 238   4              if(pole9==' '){
+ 239   5              Lcd_Cursor(3, 5);
+ 240   5              pole9 = player;
+C51 COMPILER V9.60.0.0   MAIN                                                              06/25/2020 00:59:14 PAGE 5   
+
+ 241   5              Lcd_DisplayCharacter(pole9);
+ 242   5              zamieniacz();
+ 243   5              }
+ 244   4              break;
+ 245   4            }
+ 246   3            sprawdzacz(); //czy wygrana
+ 247   3            spr2(); //czy remis
+ 248   3            czyKONIEC();
+ 249   3          }
+ 250   2          if(SBUF=='0'){
+ 251   3            licznik_wO='0';
+ 252   3            licznik_wX='0';
+ 253   3            player='x';
+ 254   3            Lcd_DisplayScreen(poczatek);
+ 255   3            koniecGryOst='0';
+ 256   3          }
+ 257   2          
+ 258   2      
+ 259   2          if (SBUF == '!') {
+ 260   3            //reset gry
+ 261   3            Lcd_Cursor(1, 1);
+ 262   3            Lcd_DisplayCharacter(' ');
+ 263   3            Lcd_Cursor(1, 3);
+ 264   3            Lcd_DisplayCharacter(' ');
+ 265   3            Lcd_Cursor(1, 5);
+ 266   3            Lcd_DisplayCharacter(' ');
+ 267   3            Lcd_Cursor(2, 1);
+ 268   3            Lcd_DisplayCharacter(' ');
+ 269   3            Lcd_Cursor(2, 3);
+ 270   3            Lcd_DisplayCharacter(' ');
+ 271   3            Lcd_Cursor(2, 5);
+ 272   3            Lcd_DisplayCharacter(' ');
+ 273   3            Lcd_Cursor(3, 1);
+ 274   3            Lcd_DisplayCharacter(' ');
+ 275   3            Lcd_Cursor(3, 3);
+ 276   3            Lcd_DisplayCharacter(' ');
+ 277   3            Lcd_Cursor(3, 5);
+ 278   3            Lcd_DisplayCharacter(' ');
+ 279   3      
+ 280   3            Lcd_DisplayString(3, 6, czyjaKolej);
+ 281   3            Lcd_Cursor(3, 13);
+ 282   3      
+ 283   3            if (ostatniWyg == 'x') {
+ 284   4              player = 'o';
+ 285   4              Lcd_DisplayCharacter('o');
+ 286   4            } else {
+ 287   4              player = 'x';
+ 288   4              Lcd_DisplayCharacter('x');
+ 289   4            }
+ 290   3            koniecGry = '0';
+ 291   3            pole1 = ' ', pole2 = ' ', pole3 = ' ', pole4 = ' ', pole5 = ' ', pole6 = ' ', pole7 = ' ', pole8 = '
+             - ', pole9 = ' ';
+ 292   3            
+ 293   3      
+ 294   3            //dioda on/off przy resecie
+ 295   3            P3_7 = 0;
+ 296   3            wait();
+ 297   3            P3_7 = 1;
+ 298   3          }
+ 299   2          if(koniecGryOst == '0'){
+ 300   3          Lcd_Cursor(2, 9);
+ 301   3          Lcd_DisplayCharacter(licznik_wX);
+C51 COMPILER V9.60.0.0   MAIN                                                              06/25/2020 00:59:14 PAGE 6   
+
+ 302   3          Lcd_Cursor(2, 13);
+ 303   3          Lcd_DisplayCharacter(licznik_wO);
+ 304   3          }
+ 305   2          
+ 306   2          Lcd_WriteControl(0x0C);
+ 307   2          RI = 0;
+ 308   2        }
+ 309   1      }
+ 310          
+ 311          void main(void) {
+ 312   1        
+ 313   1        LcdInit(); // Zainicjowanie rejestrów uP
+ 314   1        LcdWelcome(); // wyswietlenie powitania
+ 315   1        Init(); // Zainicjowanie systemu przerwan
+ 316   1      
+ 317   1        while (1) {
+ 318   2          ;
+ 319   2        }
+ 320   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1069    ----
+   CONSTANT SIZE    =    195    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     55    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

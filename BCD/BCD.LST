@@ -1,0 +1,127 @@
+C51 COMPILER V9.60.0.0   BCD                                                               06/20/2020 23:57:07 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE BCD
+OBJECT MODULE PLACED IN BCD.OBJ
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE BCD.c OMF2 OPTIMIZE(8,SPEED) BROWSE DEBUG TABS(2)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          
+   3          /*
+   4          dp g f e d c b a
+   5          0  0 1 1 1 1 1 1 | 0
+   6          0  0 0 0 0 1 1 0 | 1 
+   7          0  1 0 1 1 0 1 1 | 2
+   8          0  1 0 0 1 1 1 1 | 3
+   9          0  1 1 0 0 1 1 0 | 4
+  10          0  1 1 0 1 1 0 1 | 5
+  11          0  1 1 1 1 1 0 1 | 6
+  12          0  0 0 0 0 1 1 1 | 7
+  13          0  1 1 1 1 1 1 1 | 8
+  14          0  1 1 0 1 1 1 1 | 9
+  15          */
+  16          
+  17          unsigned char xdata LCD1 _at_ 0xFE00;
+  18          unsigned char xdata LCD2 _at_ 0xFD00;
+  19          unsigned char code Koder[] = {0x3F,0x06,0x5B,0x4F,0x66,
+  20                                        0x6D,0x7D,0x07,0x7F,0x6F};
+  21          volatile unsigned char data ind1,ind2;
+  22          volatile unsigned char data Dot1,Dot2;  
+  23          volatile unsigned char data okres;                                  
+  24          
+  25          void Send(unsigned char Value)
+  26          {
+  27   1        P3_4=1;                 
+  28   1          TI=0;                 
+  29   1            SBUF=(Value); 
+  30   1            while(TI==0){;}     
+  31   1          TI=0;               
+  32   1        P3_4=0;                 
+  33   1      }
+  34                                        
+  35          void ISR_INT0(void) interrupt 0
+  36          {
+  37   1        if(ind2<9)
+  38   1        {
+  39   2          Send('!');
+  40   2          ind2++;
+  41   2        }
+  42   1        else
+  43   1        {
+  44   2          ind2=0;
+  45   2          ind1++;
+  46   2          if(ind1>9){ind1=0;}
+  47   2        }
+  48   1      }
+  49          
+  50          void ISR_Serial(void) interrupt 4
+  51          {
+  52   1        if(SBUF=='0'){
+  53   2          ind1=0;
+  54   2          ind2=0;}
+  55   1        if(RI==1)
+C51 COMPILER V9.60.0.0   BCD                                                               06/20/2020 23:57:07 PAGE 2   
+
+  56   1        {
+  57   2          RI=0;
+  58   2        }
+  59   1      }
+  60          
+  61          void skan(void) interrupt 3
+  62          {
+  63   1        TR1=0;
+  64   1          LCD1=(Dot1 | Koder[ind1]); //01010101
+  65   1          LCD2=(Dot2 | Koder[ind2]); //10101010
+  66   1        TH1=TL1=okres;                          
+  67   1        TR1=1;
+  68   1      }
+  69          
+  70          void Init(void)
+  71          {                           
+  72   1        P3_4=0;          // ustaw sie na odbior danych z portu szeregowego
+  73   1        ind1=0;
+  74   1        ind2=1;
+  75   1        Dot1=Dot2=0;
+  76   1        okres=0x00;
+  77   1        IT0=1;
+  78   1        EX0=1;
+  79   1        SCON=0x50;       // inicjowanie portu szeregowego
+  80   1        RCAP2H=TH2=0xFF; // predkosc transmisji 1200b/sec przy CLK=1.3824MHz 
+  81   1        RCAP2L=TL2=0xDC; // predkosc transmisji 1200b/sec przy CLK=1.3824MHz 
+  82   1        T2CON=0x30;      // Timer 2 wyznacza predkosc transmisji przez Serial
+  83   1        RI=TI=0;         // gaszenie flag odbiornika i nadajnika
+  84   1        ES=1;            // wlacz odbieranie danych przez IRQ
+  85   1        TMOD=0x20;      
+  86   1        TH0=okres;      
+  87   1        TL0=okres;
+  88   1        ET1=1;                          
+  89   1        TR1=1;    
+  90   1        TR2=1;           // wlacz Timer 2
+  91   1        EA=1;            // wlacz globalna maske przerwan
+  92   1      }
+  93          
+  94          void main(void)
+  95          {
+  96   1      Init();
+  97   1      for(;;){;}
+  98   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    230    ----
+   CONSTANT SIZE    =     10    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
